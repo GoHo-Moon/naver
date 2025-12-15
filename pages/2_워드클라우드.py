@@ -6,6 +6,8 @@ from wordcloud import WordCloud
 from konlpy.tag import Okt
 from collections import Counter
 import os # 파일 경로 확인용
+import numpy as np
+from PIL import Image
 
 # 1. 페이지 설정
 st.set_page_config(page_title="워드클라우드 분석", page_icon="☁️")
@@ -69,6 +71,28 @@ else:
         most_common_words = count.most_common(50)
 
     # 4. 워드클라우드 생성
+
+    # 마스크 이미지 불러오기 및 변환 (경로 수정 필요)
+    mask_path = "../data/mask.png" 
+#    cross_mask.png 파일을 PIL Image로 읽고 numpy 배열로 변환
+    try:
+        mask_image = np.array(Image.open(mask_path).convert("RGB")) 
+    except FileNotFoundError:
+        st.warning(f"마스크 파일을 찾을 수 없습니다: {mask_path}. 기본 모양으로 출력합니다.")
+        mask_image = None
+
+if not refined_nouns:
+    st.warning("분석할 텍스트가 부족합니다.")
+else:
+    wc = WordCloud(
+        font_path=font_path,
+        background_color='black', # 마스크 적용 시 배경색을 검정으로 하면 더 깔끔할 수 있습니다.
+        width=800,
+        height=600,
+        colormap='coolwarm', # 한글 워드클라우드 예시에서 사용한 'coolwarm'도 좋습니다[cite: 1751].
+        max_words=50,
+        mask=mask_image # <<-- 여기에 마스크 적용!
+    ).generate_from_frequencies(dict(most_common_words))
     if not refined_nouns:
         st.warning("분석할 텍스트가 부족합니다.")
     else:
